@@ -5,7 +5,7 @@ import {
   MapPin, Heart, ChevronRight, Star, ArrowUpRight, 
   ShieldCheck, Globe, Zap, Users, Trophy, Cpu, 
   Activity, Database, Network, Terminal, Sparkles,
-  Command, Layers, Fingerprint, Code2
+  Command, Layers, Fingerprint, Code2, Scale, Shield, Cookie
 } from 'lucide-react';
 import { ViewState } from '../types';
 import Logo from './Logo';
@@ -155,7 +155,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onRate }) => {
 
         </div>
 
-        {/* 3. BOTTOM BAR: COMPLIANCE & CREDITS */}
+        {/* 3. BOTTOM BAR: COMPLIANCE & LEGAL ARRANGEMENT */}
         <div className="mt-16 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12">
                 <div className="flex items-center gap-3">
@@ -164,10 +164,21 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onRate }) => {
                       © {new Date().getFullYear()} NUESA INTEL UNIT
                    </p>
                 </div>
-                <div className="flex gap-8">
-                    <a href="#" onClick={(e) => handleNavigation(e, ViewState.LEGAL)} className="text-[9px] font-bold text-slate-600 hover:text-emerald-400 uppercase tracking-[0.2em] transition-colors">Security Ethics</a>
-                    <a href="#" onClick={(e) => handleNavigation(e, ViewState.LEGAL)} className="text-[9px] font-bold text-slate-600 hover:text-emerald-400 uppercase tracking-[0.2em] transition-colors">Access Policy</a>
-                    <a href="#" className="text-[9px] font-bold text-slate-600 hover:text-emerald-400 uppercase tracking-[0.2em] transition-colors">Chapter Node</a>
+                
+                {/* Standardized Legal Links */}
+                <div className="flex gap-6 sm:gap-8">
+                    <a href="#" onClick={(e) => handleNavigation(e, ViewState.LEGAL)} className="group flex items-center gap-2 text-[9px] font-black text-slate-500 hover:text-emerald-400 uppercase tracking-[0.2em] transition-colors">
+                        <Scale size={12} className="opacity-50 group-hover:opacity-100" />
+                        Terms & Conditions
+                    </a>
+                    <a href="#" onClick={(e) => handleNavigation(e, ViewState.LEGAL)} className="group flex items-center gap-2 text-[9px] font-black text-slate-500 hover:text-emerald-400 uppercase tracking-[0.2em] transition-colors">
+                        <Shield size={12} className="opacity-50 group-hover:opacity-100" />
+                        Privacy Policy
+                    </a>
+                    <a href="#" onClick={(e) => handleNavigation(e, ViewState.LEGAL)} className="group flex items-center gap-2 text-[9px] font-black text-slate-500 hover:text-emerald-400 uppercase tracking-[0.2em] transition-colors">
+                        <Cookie size={12} className="opacity-50 group-hover:opacity-100" />
+                        Cookie Policy
+                    </a>
                 </div>
             </div>
 
