@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import SecurityPulse from './components/SecurityPulse';
 import Home from './views/Home';
 import Finder from './components/Finder';
 import Auth from './views/Auth';
@@ -17,6 +18,10 @@ import { storageService } from './services/storage';
 import { notificationService } from './services/notificationService';
 import { opportunityService } from './services/opportunityService';
 import { discoverTrendingOpportunities } from './services/geminiService';
+import { ShieldAlert, LogOut, Timer } from 'lucide-react';
+
+const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 Minutes
+const WARNING_BUFFER = 2 * 60 * 1000; // 2 Minutes warning
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.HOME);
@@ -24,9 +29,10 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [featuredOpportunities, setFeaturedOpportunities] = useState<Opportunity[]>([]);
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showSessionWarning, setShowSessionWarning] = useState(false);
   
-  // Ref to track seen notifications to prevent duplicates during live scout
   const seenNotificationTitles = useRef<Set<string>>(new Set());
+  const lastActivityRef = useRef<number>(Date.now());
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
@@ -68,11 +74,46 @@ const App: React.FC = () => {
             ? 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&q=80&w=600'
             : 'https://images.unsplash.com/photo-1627556704290-2b1f5853ff78?auto=format&fit=crop&q=80&w=600',
         description: s.criteria,
-        requiredDocuments: s.requiredDocuments // Pass through the specific required documents
+        requiredDocuments: s.requiredDocuments,
+        verificationTier: 'Partner'
     }));
 
     setFeaturedOpportunities([...mappedPartnerOpportunities, ...mockOpportunities]);
   }, []);
+
+  // --- Session Management Logic ---
+  useEffect(() => {
+      if (!user) return;
+
+      const checkSession = () => {
+          const now = Date.now();
+          const inactiveTime = now - lastActivityRef.current;
+
+          if (inactiveTime >= SESSION_TIMEOUT) {
+              handleLogout();
+              alert("Your session has expired for security reasons. Please log in again.");
+          } else if (inactiveTime >= SESSION_TIMEOUT - WARNING_BUFFER) {
+              setShowSessionWarning(true);
+          }
+      };
+
+      const resetActivity = () => {
+          lastActivityRef.current = Date.now();
+          if (showSessionWarning) setShowSessionWarning(false);
+      };
+
+      const interval = setInterval(checkSession, 10000);
+      window.addEventListener('mousemove', resetActivity);
+      window.addEventListener('keydown', resetActivity);
+      window.addEventListener('scroll', resetActivity);
+
+      return () => {
+          clearInterval(interval);
+          window.removeEventListener('mousemove', resetActivity);
+          window.removeEventListener('keydown', resetActivity);
+          window.removeEventListener('scroll', resetActivity);
+      };
+  }, [user, showSessionWarning]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -106,22 +147,18 @@ const App: React.FC = () => {
     storedNotifications.forEach(n => seenNotificationTitles.current.add(n.message));
     
     loadOpportunities();
-
-    // Start the Live Notification Scout
     startLiveScout();
 
-    // Global navigation listener for unauthenticated actions
     const handleAuthNav = () => setCurrentView(ViewState.AUTH);
     window.addEventListener('navigate-auth', handleAuthNav);
     return () => window.removeEventListener('navigate-auth', handleAuthNav);
   }, [loadOpportunities]);
 
   const startLiveScout = () => {
-      // 1. Mandatory Data Security & Usage Notification
       setTimeout(() => {
-          const secNotif = notificationService.formatDiscoveredNotification("Data Usage & Privacy", "NUESA Compliance", 'system' as any);
-          secNotif.title = "Security & Privacy Confirmed";
-          secNotif.message = "We confirm that your personal and academic data is secured with industrial-grade encryption and will be used solely for scholarship and internship matching purposes.";
+          const secNotif = notificationService.formatDiscoveredNotification("Data Usage & Privacy", "NUESA Compliance", 'security' as any);
+          secNotif.title = "Security & Privacy Protocol Active";
+          secNotif.message = "Encryption layer established. All academic data is isolated and protected under NUESA INTEL Security Guidelines.";
           
           if (!seenNotificationTitles.current.has(secNotif.message)) {
               setNotifications(prev => [secNotif, ...prev]);
@@ -131,7 +168,6 @@ const App: React.FC = () => {
           }
       }, 5000);
 
-      // 2. Real-World Discovery Loop (The "Real-Life" part)
       const scoutInterval = setInterval(async () => {
           const trending = await discoverTrendingOpportunities();
           
@@ -142,12 +178,10 @@ const App: React.FC = () => {
                   setNotifications(prev => [notif, ...prev]);
                   storageService.addNotification(notif);
                   seenNotificationTitles.current.add(notif.message);
-                  
-                  // Native OS Notification
                   notificationService.triggerSystemNotification(notif.title, notif.message, notif.type);
               }
           });
-      }, 180000); // 3 minutes loop for real-time scanning
+      }, 180000); 
 
       return () => clearInterval(scoutInterval);
   };
@@ -156,7 +190,6 @@ const App: React.FC = () => {
       setNotifications(prev => [notification, ...prev]);
       storageService.addNotification(notification);
       notificationService.triggerSystemNotification(notification.title, notification.message, notification.type);
-      // Immediately refresh opportunities when a partner creates one
       loadOpportunities();
   };
 
@@ -179,6 +212,7 @@ const App: React.FC = () => {
 
   const handleLogin = (newUser: User) => {
     setUser(newUser);
+    lastActivityRef.current = Date.now();
     if (storageService.shouldShowRating()) setTimeout(() => setShowRatingModal(true), 2000);
     if (newUser.role === 'sponsor') setCurrentView(ViewState.SPONSORS);
     else setCurrentView(ViewState.DASHBOARD);
@@ -192,12 +226,13 @@ const App: React.FC = () => {
   const handleLogout = () => {
     storageService.logout();
     setUser(null);
+    setShowSessionWarning(false);
     setCurrentView(ViewState.HOME);
   };
 
   const handleSaveOpportunity = (opp: ParsedOpportunity, type: 'scholarship' | 'internship', status: 'Applied' | 'Interested' | 'Won' = 'Applied', requiredDocuments?: string[]) => {
     if (!user) {
-        alert("Please sign in to track applications.");
+        alert("Please establish a secure session to track applications.");
         setCurrentView(ViewState.AUTH);
         return;
     }
@@ -229,6 +264,8 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-gray-950 font-sans text-slate-900 dark:text-gray-100 transition-colors">
+      <SecurityPulse />
+      
       <Navbar 
         currentView={currentView} 
         onNavigate={setCurrentView} 
@@ -245,6 +282,26 @@ const App: React.FC = () => {
       <main className="flex-grow w-full md:pr-80 transition-all duration-300">
         {renderView()}
       </main>
+
+      {/* Session Expiration Warning Overlay */}
+      {showSessionWarning && (
+          <div className="fixed bottom-6 left-6 z-[200] max-w-sm bg-amber-600 text-white p-6 rounded-2xl shadow-2xl animate-fade-in-up border border-amber-400">
+              <div className="flex items-center gap-4 mb-4">
+                  <div className="p-3 bg-white/20 rounded-xl">
+                      <Timer size={24} className="animate-pulse" />
+                  </div>
+                  <div>
+                      <h4 className="font-black text-lg">Session Heartbeat Weak</h4>
+                      <p className="text-xs text-amber-100 uppercase tracking-widest font-bold">Auto-Termination imminent</p>
+                  </div>
+              </div>
+              <p className="text-sm mb-6 opacity-90">For your security, we'll sign you out in 2 minutes due to inactivity. Move your mouse or press a key to extend.</p>
+              <div className="flex gap-3">
+                  <button onClick={() => { lastActivityRef.current = Date.now(); setShowSessionWarning(false); }} className="flex-1 bg-white text-amber-700 py-2.5 rounded-xl font-bold text-sm">Stay Active</button>
+                  <button onClick={handleLogout} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-colors"><LogOut size={20} /></button>
+              </div>
+          </div>
+      )}
 
       <div className="md:pr-80 transition-all duration-300">
          <Footer onNavigate={setCurrentView} onRate={() => setShowRatingModal(true)} />

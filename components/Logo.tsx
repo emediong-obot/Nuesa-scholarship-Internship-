@@ -10,109 +10,105 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ className = "", size = 40, variant = 'icon', id = 'main' }) => {
   return (
-    <div className={`flex items-center gap-2 ${className}`} style={{ height: size }}>
+    <div className={`flex items-center gap-3 ${className}`} style={{ height: size }}>
       <svg 
         width={size} 
         height={size} 
-        viewBox="0 0 100 100" 
+        viewBox="0 0 120 120" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
-        className="drop-shadow-md transition-transform hover:scale-105 duration-300"
+        className="drop-shadow-xl transition-all hover:scale-105 duration-500"
       >
         <defs>
-          {/* Main Logo Colors */}
-          <linearGradient id={`grad-${id}-gold`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FFD700" />
-            <stop offset="100%" stopColor="#FFA500" />
-          </linearGradient>
           <linearGradient id={`grad-${id}-orange`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#F97316" />
-            <stop offset="100%" stopColor="#C2410C" />
+            <stop offset="0%" stopColor="#FB923C" />
+            <stop offset="100%" stopColor="#EA580C" />
           </linearGradient>
-          
-          {/* Text Path for Circular Text */}
-          <path id={`textPath-${id}`} d="M 20, 50 a 30,30 0 1,1 60,0 a 30,30 0 1,1 -60,0" />
+          <linearGradient id={`grad-${id}-yellow`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FDE047" />
+            <stop offset="100%" stopColor="#F59E0B" />
+          </linearGradient>
+          <filter id={`glow-${id}`}>
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
         </defs>
 
-        {/* Outer Gear Teeth */}
-        <g stroke="#C2410C" strokeWidth="2.5" strokeLinecap="round">
-          {[...Array(14)].map((_, i) => (
-            <line 
-              key={i} 
-              x1="50" y1="5" x2="50" y2="12" 
-              transform={`rotate(${i * (360 / 14)}, 50, 50)`} 
+        {/* Outer Gear - 12 Spokes */}
+        <g className="animate-[spin_20s_linear_infinite] origin-center">
+          <circle cx="60" cy="60" r="50" stroke="#854D0E" strokeWidth="1" fill="#FACC15" />
+          {[...Array(12)].map((_, i) => (
+            <rect
+              key={i}
+              x="54"
+              y="4"
+              width="12"
+              height="8"
+              fill="#EA580C"
+              transform={`rotate(${i * 30} 60 60)`}
+              stroke="#854D0E"
+              strokeWidth="0.5"
             />
           ))}
         </g>
 
-        {/* Main Crest Circle */}
-        <circle cx="50" cy="50" r="40" fill={`url(#grad-${id}-gold)`} stroke="#C2410C" strokeWidth="1.5" />
-        <circle cx="50" cy="50" r="34" stroke="#C2410C" strokeWidth="1" fill="transparent" />
-
-        {/* Circular Association Text (Simulated) */}
-        <text fontSize="4.5" fontWeight="900" fill="#C2410C" letterSpacing="0.2">
+        {/* Inner Branding Circle */}
+        <circle cx="60" cy="60" r="42" fill="#FDE047" stroke="#EA580C" strokeWidth="2" />
+        
+        {/* Association Name Path */}
+        <path id={`textPath-${id}`} d="M 60, 60 m -34, 0 a 34,34 0 1,1 68,0 a 34,34 0 1,1 -68,0" fill="none" />
+        <text className="text-[5.5px] font-black fill-[#EA580C] tracking-tight uppercase">
           <textPath href={`#textPath-${id}`} startOffset="50%" textAnchor="middle">
-            NIGERIAN UNIVERSITIES ENGINEERING STUDENTS' ASSOCIATION
+            Nigerian Universities Engineering Students' Association
           </textPath>
         </text>
 
-        {/* Engineering Equipment Symbol (Stylized Crane/Lift) */}
-        <g transform="translate(28, 38) scale(0.45)">
-          <rect x="0" y="45" width="100" height="12" rx="2" fill="#C2410C" />
-          <rect x="15" y="5" width="12" height="50" fill="#C2410C" />
-          <rect x="75" y="0" width="18" height="60" rx="3" fill="#C2410C" />
-          <path d="M15 15 L75 10 L75 25 L15 30 Z" fill="#C2410C" opacity="0.9" />
-          <circle cx="20" cy="72" r="10" fill="#C2410C" stroke="white" strokeWidth="2" />
-          <circle cx="80" cy="72" r="10" fill="#C2410C" stroke="white" strokeWidth="2" />
-          {/* Ladder detail */}
-          {[...Array(5)].map((_, i) => (
-            <rect key={i} x="78" y={10 + i * 8} width="12" height="3" fill="white" opacity="0.5" />
+        {/* Center Graphic: The Truss/Building Emblems */}
+        <g transform="translate(38, 42) scale(0.45)">
+          {/* Stylized Building/Truss Shape */}
+          <path d="M0 80 V20 L40 0 V60 H0" fill="#EA580C" opacity="0.9" />
+          <path d="M40 0 L80 20 V80 H40 V0" fill="#9A3412" />
+          {/* Windows / Structural Details */}
+          {[...Array(6)].map((_, i) => (
+            <rect key={i} x="48" y={25 + (i * 8)} width="24" height="4" fill="#FDE047" />
           ))}
+          {/* Truss Lines */}
+          <path d="M5 75 L35 25 M5 25 L35 75" stroke="#FDE047" strokeWidth="2" />
         </g>
 
-        {/* UNIUYO Chapter Text */}
-        <text 
-          x="50" 
-          y="76" 
-          textAnchor="middle" 
-          fill="#065f46" 
-          fontSize="4.5" 
-          fontWeight="900"
-          fontFamily="Inter, Arial"
-        >
-          UNIUYO CHAPTER
-        </text>
-
-        {/* Bottom Banner/Ribbon */}
+        {/* UNIUYO Banner Layer */}
         <path 
-          d="M15 82 Q50 92 85 82 L88 95 Q50 105 12 95 Z" 
-          fill="#FFD700" 
-          stroke="#065f46" 
-          strokeWidth="1"
+          d="M25 85 Q60 80 95 85 L105 105 Q60 100 15 105 Z" 
+          fill="#FACC15" 
+          stroke="#854D0E" 
+          strokeWidth="1" 
         />
-        
-        {/* NUESA Text on Banner */}
-        <text 
-          x="50" 
-          y="93" 
-          textAnchor="middle" 
-          fill="#065f46" 
-          fontSize="10" 
-          fontWeight="1000"
-          fontFamily="Inter, Arial"
-        >
+        <text x="60" y="94" textAnchor="middle" className="text-[6px] font-black fill-[#EA580C] uppercase tracking-widest">
+          Uniuyo Chapter
+        </text>
+        <text x="60" y="103" textAnchor="middle" className="text-[9px] font-black fill-[#065F46] uppercase tracking-tighter shadow-sm">
           NUESA
         </text>
+
+        {/* Decorative Side Ribbon Ends */}
+        <path d="M15 105 L5 112 L15 100" fill="#EAB308" stroke="#854D0E" />
+        <path d="M105 105 L115 112 L105 100" fill="#EAB308" stroke="#854D0E" />
       </svg>
       
       {variant === 'full' && (
         <div className="flex flex-col leading-none">
-          <span className="text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase">
-            NUESA <span className="text-orange-500">SCHOLAS</span>
+          <span className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white uppercase flex items-center gap-1">
+            NUESA <span className="text-emerald-600 font-serif lowercase italic tracking-normal">scholars</span>
           </span>
-          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 tracking-[0.2em] uppercase">
-            UNIUYO CHAPTER Portal
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9px] font-black text-orange-600 dark:text-orange-500 tracking-[0.25em] uppercase">
+              Uniuyo Node
+            </span>
+            <div className="w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+              nuesascholars.org
+            </span>
+          </div>
         </div>
       )}
     </div>

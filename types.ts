@@ -1,4 +1,15 @@
 
+export interface ActivityLog {
+  id: string;
+  action: string;
+  timestamp: string;
+  ip: string;
+  device: string;
+  status: 'success' | 'warning' | 'error';
+}
+
+export type VerificationTier = 'Admin' | 'Partner' | 'Unverified';
+
 export interface Opportunity {
   id: string;
   title: string;
@@ -11,7 +22,10 @@ export interface Opportunity {
   tags: string[];
   image?: string;
   description?: string;
-  requiredDocuments?: string[]; // Added specifically for partner tracking
+  requiredDocuments?: string[]; 
+  isVerified?: boolean;
+  verificationTier?: VerificationTier;
+  reportCount?: number;
 }
 
 export interface GroundingChunk {
@@ -38,10 +52,13 @@ export interface ParsedOpportunity {
 export interface User {
   name: string;
   email: string;
-  role?: 'student' | 'sponsor'; // Distinguish between students and partners
-  title?: string; // e.g., Engineer, Professor, Doctor
-  contactPerson?: string; // For sponsors: Name of the contact person
-  profilePicture?: string; // Base64 string of profile image
+  role?: 'student' | 'sponsor' | 'admin'; 
+  title?: string; 
+  contactPerson?: string; 
+  profilePicture?: string; 
+  lastLogin?: string;
+  securityScore?: number;
+  sessionExpiry?: number;
   // Bio Data
   phone?: string;
   dob?: string;
@@ -85,7 +102,7 @@ export interface SavedOpportunity extends ParsedOpportunity {
   dateSaved: string;
   status: 'Applied' | 'Interested' | 'Won';
   type: 'scholarship' | 'internship';
-  requiredDocuments?: string[]; // Track what's needed for the specific application
+  requiredDocuments?: string[]; 
 }
 
 export interface AppNotification {
@@ -94,7 +111,7 @@ export interface AppNotification {
   message: string;
   date: string;
   read: boolean;
-  type: 'scholarship' | 'internship' | 'bursary' | 'grant' | 'system';
+  type: 'scholarship' | 'internship' | 'bursary' | 'grant' | 'system' | 'security';
   link?: string;
 }
 
@@ -137,12 +154,6 @@ export const DOCUMENTS_LIST = [
   "Marriage Certificate",
   "Age Declaration Document",
   "Proof of Local Government Area of Origin",
-  "Letter of Admission",
-  "School ID Card",
-  "Valid ID Card",
-  "First Degree Certificate",
-  "Curriculum Vitae (CV)",
-  "Union Bank Account Verification Document",
   "Letter of Identification from Community",
   "A’ Level / OND / NCE Certificate",
   "JAMB (UTME) Result",

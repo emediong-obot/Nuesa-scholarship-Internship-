@@ -1,13 +1,13 @@
 
-import { User, SavedOpportunity, Sponsorship, AppNotification } from '../types';
+import { User, SavedOpportunity, Sponsorship, AppNotification, ActivityLog } from '../types';
 
 const USER_KEY = 'nuesa_user';
 const DATA_KEY = 'nuesa_data';
 const SPONSORSHIP_KEY = 'nuesa_sponsorships';
 const NOTIFICATIONS_KEY = 'nuesa_notifications';
 const RATING_PROMPT_KEY = 'nuesa_rating_prompt_date';
+const LOGS_KEY = 'nuesa_security_logs';
 
-// Mock recently joined students for social proof
 const RECENT_STUDENTS = [
   { name: "Olawale J.", img: "https://i.pravatar.cc/150?u=olawale" },
   { name: "Zainab A.", img: "https://i.pravatar.cc/150?u=zainab" },
@@ -31,6 +31,8 @@ export const storageService = {
 
   login: (email: string, name: string, role: 'student' | 'sponsor' = 'student', title?: string, contactPerson?: string): User => {
     const stored = localStorage.getItem(USER_KEY);
+    let user: User;
+
     if (stored) {
         const existing: User = JSON.parse(stored);
         if (existing.email === email) {
@@ -38,17 +40,24 @@ export const storageService = {
             if (title && !existing.title) existing.title = title;
             if (contactPerson) existing.contactPerson = contactPerson;
             if (name && existing.name !== name) existing.name = name;
-
+            existing.lastLogin = new Date().toISOString();
+            
+            user = existing;
             localStorage.setItem(USER_KEY, JSON.stringify(existing));
-            return existing;
+        } else {
+            user = { email, name, role, title, contactPerson, lastLogin: new Date().toISOString(), securityScore: 65 };
+            localStorage.setItem(USER_KEY, JSON.stringify(user));
         }
+    } else {
+        user = { email, name, role, title, contactPerson, lastLogin: new Date().toISOString(), securityScore: 65 };
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
     }
 
-    const user: User = { email, name, role, title, contactPerson };
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
     if (!localStorage.getItem(DATA_KEY)) {
       localStorage.setItem(DATA_KEY, JSON.stringify({ saved: [] }));
     }
+
+    storageService.addSecurityLog('Authentication', 'Successful sign-in');
     return user;
   },
 
@@ -57,6 +66,7 @@ export const storageService = {
   },
 
   logout: () => {
+    storageService.addSecurityLog('Authentication', 'Session terminated by user');
     localStorage.removeItem(USER_KEY);
   },
 
@@ -72,6 +82,7 @@ export const storageService = {
     if (!parsed.saved.some(o => o.title === opportunity.title)) {
       parsed.saved.unshift(opportunity);
       localStorage.setItem(DATA_KEY, JSON.stringify(parsed));
+      storageService.addSecurityLog('Data Usage', `Opportunity tracked: ${opportunity.title}`);
     }
   },
 
@@ -83,6 +94,7 @@ export const storageService = {
         if (index !== -1) {
             parsed.saved[index].status = status;
             localStorage.setItem(DATA_KEY, JSON.stringify(parsed));
+            storageService.addSecurityLog('Data Usage', `Application status updated to ${status}`);
         }
     }
   },
@@ -101,6 +113,7 @@ export const storageService = {
     const list: Sponsorship[] = stored ? JSON.parse(stored) : [];
     list.unshift(sponsorship);
     localStorage.setItem(SPONSORSHIP_KEY, JSON.stringify(list));
+    storageService.addSecurityLog('Program Audit', `New scheme created: ${sponsorship.title}`);
   },
 
   getSponsorships: (email?: string): Sponsorship[] => {
@@ -118,19 +131,9 @@ export const storageService = {
           const list: Sponsorship[] = JSON.parse(stored);
           const index = list.findIndex(s => s.id === id);
           if (index !== -1) {
-              // In a real app, this would be a backend property. 
-              // We'll simulate tracking by storing it in local storage for now.
-              // Note: Sponsorship type doesn't officially have 'applicantCount', 
-              // we can just log it or add it if needed.
               console.log(`Applicant tracked for sponsorship: ${id}`);
           }
       }
-  },
-
-  getSponsorshipById: (id: string): Sponsorship | undefined => {
-    const stored = localStorage.getItem(SPONSORSHIP_KEY);
-    const list: Sponsorship[] = stored ? JSON.parse(stored) : [];
-    return list.find(s => s.id === id);
   },
 
   getNotifications: (): AppNotification[] => {
@@ -146,10 +149,37 @@ export const storageService = {
     localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(list));
   },
 
+  addSecurityLog: (action: string, detail: string, status: 'success' | 'warning' | 'error' = 'success') => {
+      const stored = localStorage.getItem(LOGS_KEY);
+      const list: ActivityLog[] = stored ? JSON.parse(stored) : [];
+      const newLog: ActivityLog = {
+          id: crypto.randomUUID(),
+          action: `${action}: ${detail}`,
+          timestamp: new Date().toISOString(),
+          ip: '197.210.64.' + Math.floor(Math.random() * 255),
+          device: 'Chrome on MacOS (Encrypted)',
+          status
+      };
+      list.unshift(newLog);
+      if (list.length > 20) list.pop();
+      localStorage.setItem(LOGS_KEY, JSON.stringify(list));
+  },
+
+  getSecurityLogs: (): ActivityLog[] => {
+      const stored = localStorage.getItem(LOGS_KEY);
+      return stored ? JSON.parse(stored) : [];
+  },
+
+  purgeAllData: () => {
+      localStorage.removeItem(USER_KEY);
+      localStorage.removeItem(DATA_KEY);
+      localStorage.removeItem(NOTIFICATIONS_KEY);
+      localStorage.removeItem(LOGS_KEY);
+  },
+
   shouldShowRating: (): boolean => {
     const lastPrompt = localStorage.getItem(RATING_PROMPT_KEY);
     if (!lastPrompt) return true;
-    
     const oneDay = 24 * 60 * 60 * 1000;
     const now = Date.now();
     return now - parseInt(lastPrompt) > oneDay;

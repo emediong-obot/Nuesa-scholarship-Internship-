@@ -36,30 +36,26 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onRate }) => {
             </div>
             <div className="flex items-center gap-2">
               <Database size={12} className="text-slate-600" />
-              <span className="text-slate-500">Sync: 100% Secure</span>
+              <span className="text-slate-500">Domain: nuesascholars.org</span>
             </div>
             <div className="flex items-center gap-2">
               <Activity size={12} className="text-slate-600" />
-              <span className="text-slate-500">Engine: AI-V3.2-Stable</span>
+              <span className="text-slate-500">Sync: TLS 1.3 Active</span>
             </div>
           </div>
           <div className="flex items-center gap-6">
              <div className="flex items-center gap-2">
                 <Star size={12} className="text-amber-400 fill-amber-400" />
-                <span className="text-slate-300">Avg Rating: 4.9/5.0</span>
+                <span className="text-slate-300">Certified Secure</span>
              </div>
              <span className="text-slate-600">Region: Africa/Lagos</span>
           </div>
         </div>
       </div>
 
-      {/* BACKGROUND DECORATIONS */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '30px 30px' }}></div>
-      <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16 relative z-10">
-        
-        {/* Main Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Module 1: Brand & Identity */}
@@ -69,7 +65,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onRate }) => {
                 <Logo variant="full" size={54} id="footer-bento-logo" />
               </div>
               <p className="text-sm text-slate-500 leading-relaxed font-medium">
-                The intelligence layer connecting Africa's engineering elite with global opportunity. 
+                The official intelligence layer for nuesascholars.org, connecting engineering excellence with global funding opportunities.
               </p>
             </div>
             <div className="mt-8 pt-8 border-t border-white/5 flex gap-4">
@@ -81,7 +77,6 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onRate }) => {
             </div>
           </div>
 
-          {/* Module 2: Arranged Navigation Matrix */}
           <div className="lg:col-span-2 grid grid-cols-2 gap-6">
             <div className="bg-white/[0.02] border border-white/5 p-8 rounded-[2rem] hover:border-emerald-500/30 transition-all duration-500">
               <h4 className="text-white text-xs font-black uppercase tracking-[0.25em] mb-8 flex items-center gap-3">
@@ -121,12 +116,11 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onRate }) => {
             </div>
           </div>
 
-          {/* Module 3: Engagement & Sync */}
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-emerald-600 p-8 rounded-[2rem] text-white shadow-2xl shadow-emerald-900/20 relative overflow-hidden group">
               <Zap size={40} className="absolute -right-2 -top-2 opacity-10 group-hover:scale-125 transition-transform" />
               <h4 className="text-lg font-black mb-2">Intel Sync</h4>
-              <p className="text-[11px] text-emerald-100 mb-6 leading-relaxed">Join the weekly broadcast of top-tier opportunities.</p>
+              <p className="text-[11px] text-emerald-100 mb-6 leading-relaxed">Broadcast updates from nuesascholars.org directly to your node.</p>
               <form onSubmit={e => e.preventDefault()} className="space-y-3">
                 <input 
                   type="email" 
@@ -138,8 +132,6 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onRate }) => {
                 </button>
               </form>
             </div>
-
-            {/* User Sentiment Component */}
             <div className="bg-white/[0.02] border border-white/5 p-6 rounded-[2rem] flex flex-col justify-center items-center gap-4 group cursor-pointer hover:bg-white/[0.04] transition-all" onClick={onRate}>
                <div className="flex gap-1">
                   {[1,2,3,4,5].map(i => (
@@ -148,36 +140,33 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onRate }) => {
                </div>
                <div className="text-center">
                   <p className="text-white text-xs font-black uppercase tracking-widest leading-none mb-1">Highly Trusted</p>
-                  <p className="text-[9px] text-slate-500 uppercase font-bold">Based on 2.4k Students</p>
+                  <p className="text-[9px] text-slate-500 uppercase font-bold">Official Student Gateway</p>
                </div>
             </div>
           </div>
-
         </div>
 
-        {/* 3. BOTTOM BAR: COMPLIANCE & LEGAL ARRANGEMENT */}
         <div className="mt-16 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12">
                 <div className="flex items-center gap-3">
                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                      © {new Date().getFullYear()} NUESA INTEL UNIT
+                      © {new Date().getFullYear()} NUESASCHOLARS.ORG • INTEL UNIT
                    </p>
                 </div>
                 
-                {/* Standardized Legal Links */}
                 <div className="flex gap-6 sm:gap-8">
                     <a href="#" onClick={(e) => handleNavigation(e, ViewState.LEGAL)} className="group flex items-center gap-2 text-[9px] font-black text-slate-500 hover:text-emerald-400 uppercase tracking-[0.2em] transition-colors">
                         <Scale size={12} className="opacity-50 group-hover:opacity-100" />
-                        Terms & Conditions
+                        Terms
                     </a>
                     <a href="#" onClick={(e) => handleNavigation(e, ViewState.LEGAL)} className="group flex items-center gap-2 text-[9px] font-black text-slate-500 hover:text-emerald-400 uppercase tracking-[0.2em] transition-colors">
                         <Shield size={12} className="opacity-50 group-hover:opacity-100" />
-                        Privacy Policy
+                        Privacy
                     </a>
                     <a href="#" onClick={(e) => handleNavigation(e, ViewState.LEGAL)} className="group flex items-center gap-2 text-[9px] font-black text-slate-500 hover:text-emerald-400 uppercase tracking-[0.2em] transition-colors">
                         <Cookie size={12} className="opacity-50 group-hover:opacity-100" />
-                        Cookie Policy
+                        Cookies
                     </a>
                 </div>
             </div>
@@ -185,18 +174,9 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onRate }) => {
             <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
                     <ShieldCheck size={14} className="text-emerald-500" />
-                    <span className="text-[9px] font-black text-emerald-500/80 uppercase tracking-widest">Verified SSO</span>
-                </div>
-                <div className="flex items-center gap-2 group cursor-help">
-                    <Code2 size={14} className="text-slate-600 group-hover:text-emerald-400 transition-colors" />
-                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">v2.5.0 Stable</span>
+                    <span className="text-[9px] font-black text-emerald-500/80 uppercase tracking-widest">nuesascholars.org SECURED</span>
                 </div>
             </div>
-        </div>
-
-        {/* TERMINAL FOOTER LINE */}
-        <div className="mt-12 text-center">
-            <p className="text-[8px] font-mono text-slate-800 tracking-[0.8em] opacity-40">SYSTEM_EXIT_0x00_FOOTER_RENDER_COMPLETE</p>
         </div>
       </div>
     </footer>

@@ -16,8 +16,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   }, []);
 
   const handleDelete = (id: string) => {
-    storageService.removeOpportunity(id);
-    setOpportunities(prev => prev.filter(o => o.id !== id));
+    const promptMsg = "This action will permanently remove this item. Continue?";
+    if (window.confirm(promptMsg)) {
+        if (window.confirm(promptMsg)) {
+            storageService.removeOpportunity(id);
+            setOpportunities(prev => prev.filter(o => o.id !== id));
+        }
+    }
   };
 
   const handleStatusChange = (id: string, newStatus: 'Applied' | 'Interested' | 'Won') => {

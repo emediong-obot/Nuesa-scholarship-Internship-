@@ -99,19 +99,6 @@ const Finder: React.FC<FinderProps> = ({ type, onSave, user, featuredOpportuniti
       setQuery(prev => prev ? `${prev} ${filter}` : filter);
   };
 
-  const handleFeedback = (vote: 'up' | 'down') => {
-    if (vote === 'up') {
-        setFeedback('up');
-    } else {
-        setIsCommenting(true);
-    }
-  };
-
-  const submitNegativeFeedback = () => {
-      setFeedback('down');
-      setIsCommenting(false);
-  };
-
   const handleSave = (opp: ParsedOpportunity | Opportunity, status: 'Applied' | 'Interested' | 'Won', requiredDocs?: string[]) => {
       if (onSave) {
           const toSave: ParsedOpportunity = {
@@ -128,8 +115,18 @@ const Finder: React.FC<FinderProps> = ({ type, onSave, user, featuredOpportuniti
   };
 
   const handleApplyNow = (opp: Opportunity) => {
+      const isPartner = opp.tags?.includes('Partner Sponsored');
+
+      if (!isPartner) {
+          // REAL LIFE SEARCH: Direct to external portal
+          const directLink = opp.link || `https://www.google.com/search?q=${encodeURIComponent(opp.title)}`;
+          window.open(directLink, '_blank');
+          return;
+      }
+
+      // NUESA INTERNAL: Auto-apply logic
       if (!user) {
-          alert("Sign-in required: You must be logged in as a student to apply.");
+          alert("Sign-in required: You must be logged in as a student to apply for partner schemes.");
           window.dispatchEvent(new CustomEvent('navigate-auth'));
           return;
       }
@@ -148,12 +145,12 @@ const Finder: React.FC<FinderProps> = ({ type, onSave, user, featuredOpportuniti
       // Check for missing documents
       const missingDocs = opp.requiredDocuments?.filter(doc => !user.documents?.[doc]) || [];
       
-      const successMsg = `Application Complete! We have successfully sent your NUESA profile to ${opp.provider}. You are now being tracked as an applicant.`;
+      const successMsg = `Application Complete! We have successfully transmitted your NUESA profile to ${opp.provider}. You are now being tracked as an applicant.`;
       
       if (missingDocs.length > 0) {
-          alert(`${successMsg}\n\nURGENT: To finish your file, please go to your Profile and provide these missing documents: ${missingDocs.join(', ')}. The partner will review your application once these are uploaded.`);
+          alert(`${successMsg}\n\nURGENT: Please visit your Profile to upload: ${missingDocs.join(', ')}. The partner will prioritize your file once these are verified.`);
       } else {
-          alert(`${successMsg}\n\nYour profile is 100% complete for this scheme. The partner has received your full documentation.`);
+          alert(`${successMsg}\n\nYour profile is 100% verified for this scheme.`);
       }
       
       setSelectedOpportunity(null);
@@ -192,8 +189,8 @@ const Finder: React.FC<FinderProps> = ({ type, onSave, user, featuredOpportuniti
                         <Sparkles className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Top Opportunities Found</h3>
-                        <p className="text-sm text-gray-500">AI-curated matches based on your search</p>
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">AI Search Discoveries</h3>
+                        <p className="text-sm text-gray-500">Real-life sources identified via live intelligence</p>
                     </div>
                 </div>
                 
@@ -204,21 +201,28 @@ const Finder: React.FC<FinderProps> = ({ type, onSave, user, featuredOpportuniti
                         const isLinkValid = directLink && directLink.toLowerCase() !== 'not specified' && directLink.startsWith('http');
 
                         return (
-                            <div key={idx} className="group bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none relative overflow-hidden hover:-translate-y-1 transition-transform duration-300 flex flex-col">
+                            <div 
+                                key={idx} 
+                                onClick={() => isLinkValid && window.open(directLink, '_blank')}
+                                className="group bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none relative overflow-hidden hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer"
+                            >
                                 <div className={`absolute -right-12 -top-12 w-40 h-40 bg-${theme.primary}-50 dark:bg-${theme.primary}-900/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700 pointer-events-none`}></div>
                                 <div className="relative z-10 flex flex-col h-full">
                                     <div className="flex justify-between items-start gap-4 mb-4">
                                          <div className="flex items-center gap-3">
                                              <div className={`w-12 h-12 rounded-2xl bg-${theme.primary}-100 dark:bg-${theme.primary}-900/40 flex items-center justify-center text-${theme.primary}-600 dark:text-${theme.primary}-400 shadow-inner`}>
-                                                 <Building size={20} />
+                                                 <Globe size={20} />
                                              </div>
                                              <div>
-                                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Provider</p>
-                                                 <p className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{opp.Provider || 'Organization'}</p>
+                                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">External Source</p>
+                                                 <p className="text-sm font-bold text-gray-900 dark:text-white leading-tight truncate max-w-[120px]">{opp.Provider || 'Verified Site'}</p>
                                              </div>
                                          </div>
                                          <button
-                                            onClick={() => !isSaved && handleSave(opp, 'Interested')}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                !isSaved && handleSave(opp, 'Interested');
+                                            }}
                                             disabled={isSaved}
                                             className={`p-2.5 rounded-xl transition-all duration-200 ${
                                                 isSaved
@@ -229,14 +233,14 @@ const Finder: React.FC<FinderProps> = ({ type, onSave, user, featuredOpportuniti
                                             <Bookmark size={20} className={isSaved ? "fill-current" : ""} />
                                         </button>
                                     </div>
-                                    <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-6 leading-tight pr-2">{opp.title}</h3>
+                                    <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-6 leading-tight pr-2 group-hover:text-emerald-500 transition-colors">{opp.title}</h3>
                                     {opp.Amount && (
                                         <div className={`mb-6 p-4 rounded-2xl bg-gradient-to-r from-${theme.primary}-50 to-white dark:from-${theme.primary}-900/20 dark:to-gray-800 border border-${theme.primary}-100 dark:border-${theme.primary}-900/30 flex items-center gap-4 group-hover:shadow-md transition-shadow`}>
                                             <div className={`p-3 rounded-full bg-white dark:bg-gray-800 text-${theme.primary}-500 shadow-sm border border-${theme.primary}-100 dark:border-${theme.primary}-900`}>
                                                 <DollarSign size={24} />
                                             </div>
                                             <div>
-                                                <p className={`text-[10px] font-bold text-${theme.primary}-600/70 dark:text-${theme.primary}-400/70 uppercase tracking-wider`}>Value / Stipend</p>
+                                                <p className={`text-[10px] font-bold text-${theme.primary}-600/70 dark:text-${theme.primary}-400/70 uppercase tracking-wider`}>Estimated Value</p>
                                                 <p className={`text-xl font-black text-${theme.primary}-700 dark:text-${theme.primary}-300`}>{opp.Amount}</p>
                                             </div>
                                         </div>
@@ -244,50 +248,18 @@ const Finder: React.FC<FinderProps> = ({ type, onSave, user, featuredOpportuniti
                                     <div className="flex-grow">
                                          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6 line-clamp-3">{opp.Summary}</p>
                                     </div>
-                                    <div className="flex gap-4 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
-                                        <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-3 py-1.5 rounded-lg">
-                                            <Calendar size={14} />
-                                            <span>Deadline: {opp.Deadline || 'Open'}</span>
-                                        </div>
-                                    </div>
+                                    
                                     <div className="flex items-center justify-between gap-3 mt-auto">
-                                         {isSaved ? (
-                                             <div className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold bg-${theme.primary}-50 dark:bg-${theme.primary}-900/20 text-${theme.primary}-600 dark:text-${theme.primary}-400`}>
-                                                 <Check size={18} /> Application Tracked
-                                             </div>
-                                         ) : (
-                                            <div className="flex-1 relative group/btn">
-                                                <select
-                                                    onChange={(e) => {
-                                                        if (e.target.value) {
-                                                            handleSave(opp, e.target.value as any);
-                                                            e.target.value = ""; 
-                                                        }
-                                                    }}
-                                                    defaultValue=""
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                >
-                                                    <option value="" disabled>Select Status</option>
-                                                    <option value="Applied">Track as Applied</option>
-                                                    <option value="Interested">Track as Interested</option>
-                                                </select>
-                                                <button className={`w-full flex items-center justify-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 py-3 rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-lg shadow-gray-200 dark:shadow-none`}>
-                                                    <PlusCircle size={18} />
-                                                    <span>Track Application</span>
-                                                    <ChevronDown size={14} className="opacity-50" />
-                                                </button>
-                                            </div>
-                                         )}
-                                         <a 
-                                             href={isLinkValid ? directLink : `https://www.google.com/search?q=${encodeURIComponent(opp.title + ' ' + (opp.Provider || '') + ' ' + type)}`}
-                                             target="_blank" 
-                                             rel="noopener noreferrer"
-                                             className={`p-3 bg-${theme.primary}-100 dark:bg-${theme.primary}-900/40 text-${theme.primary}-600 dark:text-${theme.primary}-400 rounded-xl hover:bg-${theme.primary}-200 dark:hover:bg-${theme.primary}-900 transition-colors flex items-center justify-center gap-2 font-bold text-sm min-w-[120px]`}
-                                             title={isLinkValid ? "Direct Application Link" : "Search Original Source"}
+                                         <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                isLinkValid ? window.open(directLink, '_blank') : window.open(`https://www.google.com/search?q=${encodeURIComponent(opp.title)}`, '_blank');
+                                            }}
+                                            className={`flex-1 flex items-center justify-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 py-4 rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-100 transition-all shadow-lg group/btn`}
                                          >
-                                             {isLinkValid ? "Apply Direct" : "Find Source"}
-                                             <ExternalLink size={18} />
-                                         </a>
+                                             {isLinkValid ? "Visit Application Portal" : "Search Original Source"}
+                                             <ExternalLink size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                                         </button>
                                     </div>
                                 </div>
                             </div>
@@ -303,13 +275,9 @@ const Finder: React.FC<FinderProps> = ({ type, onSave, user, featuredOpportuniti
                 <div>
                     <h3 className="text-white font-bold text-2xl flex items-center gap-2 mb-1">
                         <Globe className="w-6 h-6" />
-                        AI Executive Summary
+                        Intelligence Summary
                     </h3>
-                    <p className="text-white/80 text-sm">Concise overview generated from live web sources.</p>
-                </div>
-                <div className="hidden sm:flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full backdrop-blur-md border border-white/20">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-white text-xs font-bold uppercase tracking-wider">Live</span>
+                    <p className="text-white/80 text-sm">Real-time data from 50+ global education nodes.</p>
                 </div>
             </div>
             <div className="p-8 prose prose-lg max-w-none text-gray-700 dark:text-gray-300">
@@ -324,12 +292,10 @@ const Finder: React.FC<FinderProps> = ({ type, onSave, user, featuredOpportuniti
       <div className={`relative pt-28 pb-40 px-4 overflow-visible ${theme.heroGradient} transition-all duration-500`}>
          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay"></div>
          <div className={`absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] ${theme.heroOverlay} via-transparent to-transparent`}></div>
-         <div className="absolute top-10 right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-         <div className="absolute bottom-10 left-10 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
          <div className="max-w-7xl mx-auto relative z-10 text-center">
              <div className="inline-flex items-center justify-center px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full mb-6 animate-scale-in shadow-xl">
                  <theme.icon size={18} className="text-white mr-2" />
-                 <span className="text-white/90 text-xs font-bold uppercase tracking-widest">{type} Portal</span>
+                 <span className="text-white/90 text-xs font-bold uppercase tracking-widest">{type} Intelligence Scouting</span>
              </div>
              <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight leading-tight drop-shadow-lg">{theme.heroTitle}</h1>
              <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-0 leading-relaxed font-light drop-shadow-md">{theme.heroSubtitle}</p>
@@ -344,30 +310,18 @@ const Finder: React.FC<FinderProps> = ({ type, onSave, user, featuredOpportuniti
                     <input
                         type="text"
                         className="w-full px-4 py-4 text-lg text-gray-900 dark:text-white bg-transparent focus:outline-none placeholder-gray-400 font-medium"
-                        placeholder={`Search for ${type}s (e.g. "Computer Science in UK")`}
+                        placeholder={`Search for live ${type}s...`}
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                     />
                 </div>
                 <div className="flex items-center gap-2 w-full md:w-auto p-1">
                     <button type="button" onClick={() => setShowDateFilter(!showDateFilter)} className={`p-4 rounded-xl transition-all border ${showDateFilter ? `bg-${theme.primary}-50 border-${theme.primary}-200 text-${theme.primary}-600 dark:bg-${theme.primary}-900/30 dark:border-${theme.primary}-800 dark:text-${theme.primary}-400` : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`} title="Filter by Date"><Filter size={20} /></button>
-                    <button type="submit" disabled={loading} className={`bg-gradient-to-r from-${theme.primary}-600 to-${theme.primary}-500 text-white font-bold py-4 px-8 md:px-12 text-lg rounded-xl transition-all shadow-lg shadow-${theme.primary}-200 dark:shadow-none hover:shadow-xl hover:-translate-y-0.5 w-full md:w-auto flex justify-center`}>{loading ? <Loader2 className="animate-spin w-6 h-6" /> : <span className="flex items-center gap-2">Search <ArrowRight size={20} /></span>}</button>
+                    <button type="submit" disabled={loading} className={`bg-gradient-to-r from-${theme.primary}-600 to-${theme.primary}-500 text-white font-bold py-4 px-8 md:px-12 text-lg rounded-xl transition-all shadow-lg shadow-${theme.primary}-200 dark:shadow-none hover:shadow-xl hover:-translate-y-0.5 w-full md:w-auto flex justify-center`}>{loading ? <Loader2 className="animate-spin w-6 h-6" /> : <span className="flex items-center gap-2">Initiate Discovery <ArrowRight size={20} /></span>}</button>
                 </div>
             </form>
-            {showDateFilter && (
-                <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 animate-fade-in">
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                        <div className={`text-${theme.primary}-600 dark:text-${theme.primary}-400 font-bold flex items-center gap-2`}><Calendar size={18} /><span className="whitespace-nowrap text-sm">Deadline Range</span></div>
-                        <div className="flex items-center gap-3 w-full">
-                            <div className="relative flex-1 group"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold uppercase">From</span><input type="date" value={dateRange.start} onChange={(e) => setDateRange(prev => ({...prev, start: e.target.value}))} className={`w-full pl-12 pr-4 py-2.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-${theme.primary}-500 outline-none text-gray-900 dark:text-white text-sm transition-all`} /></div>
-                            <ArrowRight size={16} className="text-gray-300" />
-                            <div className="relative flex-1 group"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold uppercase">To</span><input type="date" value={dateRange.end} onChange={(e) => setDateRange(prev => ({...prev, end: e.target.value}))} className={`w-full pl-10 pr-4 py-2.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-${theme.primary}-500 outline-none text-gray-900 dark:text-white text-sm transition-all`} /></div>
-                        </div>
-                    </div>
-                </div>
-            )}
             <div className="mt-6 flex flex-wrap justify-center gap-2">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider py-2 mr-2">Trending:</span>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider py-2 mr-2">Quick Nodes:</span>
                 {theme.quickFilters.map(filter => (
                     <button key={filter} onClick={() => handleQuickFilter(filter)} className={`px-3 py-1.5 rounded-full text-xs font-bold bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-${theme.primary}-400 hover:text-${theme.primary}-600 dark:hover:text-${theme.primary}-400 hover:bg-white dark:hover:bg-gray-800 transition-all`}>{filter}</button>
                 ))}
@@ -379,7 +333,7 @@ const Finder: React.FC<FinderProps> = ({ type, onSave, user, featuredOpportuniti
         {!hasSearched && advice && (
             <div className={`mb-20 max-w-4xl mx-auto bg-white dark:bg-gray-800 border border-${theme.primary}-100 dark:border-${theme.primary}-900/30 rounded-3xl p-8 flex flex-col md:flex-row items-center gap-6 shadow-xl animate-fade-in-up`}>
                 <div className={`p-4 bg-${theme.primary}-50 dark:bg-${theme.primary}-900/20 rounded-2xl text-${theme.primary}-600 dark:text-${theme.primary}-400 shadow-sm`}><Zap className="w-8 h-8" /></div>
-                <div className="text-center md:text-left"><h4 className={`text-xl font-bold text-gray-900 dark:text-white mb-2`}>Pro Tip from our AI</h4><p className={`text-gray-600 dark:text-gray-300 text-base leading-relaxed`}>{advice}</p></div>
+                <div className="text-center md:text-left"><h4 className={`text-xl font-bold text-gray-900 dark:text-white mb-2`}>Scouting Intelligence</h4><p className={`text-gray-600 dark:text-gray-300 text-base leading-relaxed`}>{advice}</p></div>
             </div>
         )}
 
@@ -388,7 +342,7 @@ const Finder: React.FC<FinderProps> = ({ type, onSave, user, featuredOpportuniti
                 <div className="flex items-center justify-between mb-10">
                     <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-2xl bg-gradient-to-br from-${theme.primary}-500 to-${theme.primary}-600 text-white shadow-lg transform -rotate-3`}><Star size={24} className="fill-white" /></div>
-                        <div><h3 className="text-3xl font-black text-gray-900 dark:text-white">Featured {type === 'scholarship' ? 'Scholarships' : 'Internships'}</h3><p className="text-gray-500 font-medium">Curated top picks closing soon</p></div>
+                        <div><h3 className="text-3xl font-black text-gray-900 dark:text-white">Partner & Local Hub</h3><p className="text-gray-500 font-medium">Direct opportunities from NUESA verified partners</p></div>
                     </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -402,7 +356,7 @@ const Finder: React.FC<FinderProps> = ({ type, onSave, user, featuredOpportuniti
         {loading && (
             <div className="flex flex-col items-center justify-center py-20 space-y-8">
                 <div className="relative"><div className={`w-24 h-24 border-4 border-${theme.primary}-100 border-t-${theme.primary}-600 rounded-full animate-spin`}></div><div className={`absolute inset-0 flex items-center justify-center`}><theme.icon size={32} className={`text-${theme.primary}-600 opacity-50`} /></div></div>
-                <div className="text-center space-y-2"><h3 className="text-2xl font-bold text-gray-900 dark:text-white">Scanning global databases...</h3><p className="text-gray-500 dark:text-gray-400 text-lg">Finding the best {type} matches for you.</p></div>
+                <div className="text-center space-y-2"><h3 className="text-2xl font-bold text-gray-900 dark:text-white">Connecting to Global Nodes...</h3><p className="text-gray-500 dark:text-gray-400 text-lg">Parsing live data for verified {type} sources.</p></div>
             </div>
         )}
 

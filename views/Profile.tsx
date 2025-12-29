@@ -117,9 +117,14 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
   };
 
   const handleRemoveFile = (docName: string) => {
-      const newDocs = { ...(formData.documents || {}) };
-      delete newDocs[docName];
-      setFormData(prev => ({ ...prev, documents: newDocs }));
+      const promptMsg = "This action will permanently remove this item. Continue?";
+      if (window.confirm(promptMsg)) {
+          if (window.confirm(promptMsg)) {
+              const newDocs = { ...(formData.documents || {}) };
+              delete newDocs[docName];
+              setFormData(prev => ({ ...prev, documents: newDocs }));
+          }
+      }
   };
 
   const handleProfilePictureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

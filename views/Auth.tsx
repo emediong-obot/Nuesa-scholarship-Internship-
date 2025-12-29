@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { User } from '../types';
 import { storageService } from '../services/storage';
 import { 
@@ -19,13 +19,42 @@ import {
   Lock, 
   Sparkles,
   ArrowLeft,
-  Check
+  Check,
+  AlertTriangle,
+  Fingerprint
 } from 'lucide-react';
 import Logo from '../components/Logo';
 
 interface AuthProps {
   onLogin: (user: User) => void;
 }
+
+const PasswordStrength: React.FC<{ password: string }> = ({ password }) => {
+    const strength = useMemo(() => {
+        if (!password) return 0;
+        let s = 0;
+        if (password.length > 7) s += 25;
+        if (/[A-Z]/.test(password)) s += 25;
+        if (/[0-9]/.test(password)) s += 25;
+        if (/[^A-Za-z0-9]/.test(password)) s += 25;
+        return s;
+    }, [password]);
+
+    const colorClass = strength <= 25 ? 'bg-red-500' : strength <= 50 ? 'bg-orange-500' : strength <= 75 ? 'bg-yellow-500' : 'bg-green-500';
+    const label = strength <= 25 ? 'Weak' : strength <= 50 ? 'Fair' : strength <= 75 ? 'Good' : 'Very Strong';
+
+    return (
+        <div className="mt-2 space-y-1">
+            <div className="flex justify-between items-center px-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Entropy Score: {strength}%</span>
+                <span className={`text-[10px] font-black uppercase tracking-wider ${colorClass.replace('bg-', 'text-')}`}>{label}</span>
+            </div>
+            <div className="h-1 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                <div className={`h-full transition-all duration-500 ${colorClass}`} style={{ width: `${strength}%` }}></div>
+            </div>
+        </div>
+    );
+};
 
 const PolicyModal: React.FC<{ 
   isOpen: boolean; 
@@ -131,12 +160,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     }
 
     if (regStep === 2) {
-        if (!password) {
-            alert("Please set a secure password.");
+        if (!password || password.length < 8) {
+            alert("Please set a secure password (min 8 characters).");
             return;
         }
         if (!agreedToTerms || !agreedToPrivacy || !agreedToCookies) {
-            alert("Please review and accept all policies to continue.");
+            alert("Please review and accept all student policies to continue.");
             return;
         }
         setLoading(true);
@@ -199,15 +228,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center bg-white dark:bg-gray-950 px-4 py-20 transition-colors overflow-hidden">
-      {/* Decorative Background Blur Elements */}
       <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[600px] h-[600px] bg-orange-100/40 dark:bg-orange-900/10 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-green-100/40 dark:bg-green-900/10 rounded-full blur-[120px] pointer-events-none"></div>
 
       <div className="max-w-5xl w-full grid md:grid-cols-2 bg-white dark:bg-gray-900 rounded-[3rem] shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800 relative z-10 animate-scale-in">
         
-        {/* Left Side: Branding & Info */}
         <div className="relative p-12 bg-gradient-to-br from-green-700 to-green-950 text-white flex flex-col justify-between overflow-hidden">
-             {/* Subtle Pattern */}
              <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/circuit-board.png')] mix-blend-overlay"></div>
              
              <div className="relative z-10">
@@ -215,59 +241,58 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                     <Logo size={48} id="auth-logo" />
                     <div>
                          <h1 className="text-2xl font-black tracking-tight">NUESA <span className="text-orange-400">SCHOLAS</span></h1>
-                         <p className="text-[10px] text-green-200 font-bold uppercase tracking-widest">Student Portal</p>
+                         <p className="text-[10px] text-green-200 font-bold uppercase tracking-widest">Secure Student Portal</p>
                     </div>
                 </div>
 
                 <div className="space-y-8">
                     <h2 className="text-4xl md:text-5xl font-black leading-tight tracking-tight">
-                        Your scholarship journey <span className="text-orange-400">starts here.</span>
+                        Your scholarship journey <span className="text-orange-400">is secured.</span>
                     </h2>
                     <p className="text-green-100/80 text-lg leading-relaxed font-light max-w-sm">
-                        Join over 20,000+ students leveraging AI to find and win fully funded global opportunities.
+                        Enterprise-grade encryption protecting your academic identity since day one.
                     </p>
                     
                     <div className="space-y-4">
                         <div className="flex items-center gap-3 bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-sm">
                             <div className="p-2 bg-orange-500/20 rounded-lg text-orange-400">
-                                <Sparkles size={20} />
+                                <Fingerprint size={20} />
                             </div>
-                            <span className="text-sm font-medium">AI-Powered matching engine</span>
+                            <span className="text-sm font-medium">Biometric Sync Capability</span>
                         </div>
                         <div className="flex items-center gap-3 bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-sm">
                             <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
                                 <ShieldCheck size={20} />
                             </div>
-                            <span className="text-sm font-medium">Verified sponsors only</span>
+                            <span className="text-sm font-medium">Verified Partner Vault</span>
                         </div>
                     </div>
                 </div>
              </div>
 
              <div className="relative z-10 pt-12 flex items-center justify-between border-t border-white/10">
-                <p className="text-xs text-green-200/50">© {new Date().getFullYear()} NUESA Foundation</p>
+                <p className="text-xs text-green-200/50">© {new Date().getFullYear()} NUESA INTEL UNIT</p>
                 <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10"></div>
-                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10"></div>
+                    <Shield size={16} className="text-green-400" />
+                    <Lock size={16} className="text-green-400" />
                 </div>
              </div>
         </div>
 
-        {/* Right Side: Auth Form */}
         <div className="p-8 md:p-14 bg-white dark:bg-gray-900 overflow-y-auto max-h-[90vh] custom-scrollbar">
           <div className="mb-10 flex justify-between items-center">
              <div>
                 <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">
-                    {isBlankedOut ? 'Recover Account' : (isLogin ? 'Welcome Back' : 'Create Account')}
+                    {isBlankedOut ? 'Recover Identity' : (isLogin ? 'Safe Entry' : 'Enroll Now')}
                 </h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
                     {isLogin 
-                        ? "Enter your credentials to access your dashboard." 
+                        ? "Authentication required to access node." 
                         : regStep === 1 
-                            ? "Step 1: Your basic identification" 
+                            ? "Identity establishment" 
                             : regStep === 2 
-                                ? "Step 2: Security & Agreements"
-                                : "Step 3: Email Verification"}
+                                ? "Security & Compliance"
+                                : "Broadcast Verification"}
                 </p>
              </div>
              {!isLogin && !isBlankedOut && regStep > 1 && (
@@ -282,14 +307,13 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             
-            {/* --- RECOVERY VIEW --- */}
             {isBlankedOut && (
                 <div className="animate-fade-in space-y-6">
                     <div className="p-4 bg-orange-50 dark:bg-orange-900/10 rounded-2xl text-sm text-orange-800 dark:text-orange-300 border border-orange-100 dark:border-orange-900/20">
-                        Enter your email address and we'll send a link to reset your password.
+                        Enter your registered email to initiate an identity recovery sequence.
                     </div>
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Student Email</label>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Academic Email</label>
                         <div className="relative group">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors" size={20} />
                             <input
@@ -298,18 +322,17 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-                                placeholder="student@uni.edu.ng"
+                                placeholder="student@university.edu"
                             />
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* --- LOGIN VIEW --- */}
             {isLogin && !isBlankedOut && (
                 <div className="animate-fade-in space-y-6">
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Email Identifier</label>
                         <div className="relative group">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors" size={20} />
                             <input
@@ -318,15 +341,15 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-                                placeholder="student@uni.edu.ng"
+                                placeholder="student@university.edu"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-2">
                         <div className="flex justify-between items-center ml-1">
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Password</label>
-                            <button type="button" onClick={() => setIsBlankedOut(true)} className="text-xs font-bold text-orange-500 hover:text-orange-600">Forgot?</button>
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Key Sequence</label>
+                            <button type="button" onClick={() => setIsBlankedOut(true)} className="text-xs font-bold text-orange-500 hover:text-orange-600">Lost Access?</button>
                         </div>
                         <div className="relative group">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors" size={20} />
@@ -340,13 +363,16 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                             />
                         </div>
                     </div>
+                    
+                    <div className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 flex items-center gap-3">
+                        <ShieldCheck className="text-emerald-500" size={18} />
+                        <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest">SSL Secure Layer Active</span>
+                    </div>
                 </div>
             )}
 
-            {/* --- REGISTRATION STEPS --- */}
             {!isLogin && !isBlankedOut && (
                 <div className="animate-fade-in space-y-6">
-                    {/* Progress Dots */}
                     <div className="flex gap-2 mb-8">
                         {[1, 2, 3].map(step => (
                             <div key={step} className={`h-1.5 rounded-full transition-all duration-300 ${regStep === step ? 'w-10 bg-green-600' : 'w-4 bg-gray-200 dark:bg-gray-800'}`}></div>
@@ -356,7 +382,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                     {regStep === 1 && (
                         <div className="space-y-6 animate-slide-in-right">
                              <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
+                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Legal Name</label>
                                 <div className="relative group">
                                     <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-green-600 transition-colors" size={20} />
                                     <input
@@ -365,7 +391,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-600 outline-none transition-all"
-                                        placeholder="John Doe"
+                                        placeholder="Full Name as per ID"
                                     />
                                 </div>
                             </div>
@@ -379,7 +405,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-600 outline-none transition-all"
-                                        placeholder="student@uni.edu.ng"
+                                        placeholder="student@university.edu"
                                     />
                                 </div>
                             </div>
@@ -389,7 +415,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                     {regStep === 2 && (
                         <div className="space-y-6 animate-slide-in-right">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Set Password</label>
+                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Secure Key Sequence</label>
                                 <div className="relative group">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-green-600 transition-colors" size={20} />
                                     <input
@@ -398,13 +424,14 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-600 outline-none transition-all"
-                                        placeholder="Minimum 8 characters"
+                                        placeholder="Entropy recommended"
                                     />
                                 </div>
+                                <PasswordStrength password={password} />
                             </div>
 
                             <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-gray-800">
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Required Agreements</p>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Integrity Framework Agreements</p>
                                 
                                 <div 
                                     onClick={() => setAgreedToTerms(!agreedToTerms)}
@@ -413,8 +440,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                                     <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${agreedToTerms ? 'bg-green-600 text-white' : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600'}`}>
                                         {agreedToTerms && <Check size={14} strokeWidth={4} />}
                                     </div>
-                                    <span className="flex-1 text-xs text-gray-600 dark:text-gray-400 font-medium">
-                                        I accept the <button type="button" onClick={(e) => { e.stopPropagation(); setShowPolicy('terms'); }} className="text-green-600 font-bold hover:underline">Terms of Service</button>
+                                    <span className="flex-1 text-xs text-gray-600 dark:text-gray-400 font-bold uppercase tracking-tighter">
+                                        I accept <button type="button" onClick={(e) => { e.stopPropagation(); setShowPolicy('terms'); }} className="text-green-600 font-black hover:underline">Terms of Service</button>
                                     </span>
                                 </div>
 
@@ -425,8 +452,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                                     <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${agreedToPrivacy ? 'bg-green-600 text-white' : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600'}`}>
                                         {agreedToPrivacy && <Check size={14} strokeWidth={4} />}
                                     </div>
-                                    <span className="flex-1 text-xs text-gray-600 dark:text-gray-400 font-medium">
-                                        I consent to the <button type="button" onClick={(e) => { e.stopPropagation(); setShowPolicy('privacy'); }} className="text-green-600 font-bold hover:underline">Privacy Policy</button>
+                                    <span className="flex-1 text-xs text-gray-600 dark:text-gray-400 font-bold uppercase tracking-tighter">
+                                        Consent to <button type="button" onClick={(e) => { e.stopPropagation(); setShowPolicy('privacy'); }} className="text-green-600 font-black hover:underline">Privacy Policy</button>
                                     </span>
                                 </div>
 
@@ -437,8 +464,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                                     <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${agreedToCookies ? 'bg-green-600 text-white' : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600'}`}>
                                         {agreedToCookies && <Check size={14} strokeWidth={4} />}
                                     </div>
-                                    <span className="flex-1 text-xs text-gray-600 dark:text-gray-400 font-medium">
-                                        I accept the <button type="button" onClick={(e) => { e.stopPropagation(); setShowPolicy('cookies'); }} className="text-green-600 font-bold hover:underline">Cookies Policy</button>
+                                    <span className="flex-1 text-xs text-gray-600 dark:text-gray-400 font-bold uppercase tracking-tighter">
+                                        Accept <button type="button" onClick={(e) => { e.stopPropagation(); setShowPolicy('cookies'); }} className="text-green-600 font-black hover:underline">Cookies Policy</button>
                                     </span>
                                 </div>
                             </div>
@@ -451,11 +478,11 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                                 <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
                                     <Mail className="text-blue-600" size={32} />
                                 </div>
-                                <h4 className="font-bold text-gray-900 dark:text-white mb-1">Verify your email</h4>
-                                <p className="text-xs text-gray-500 mb-4">We sent a code to <b>{email}</b></p>
+                                <h4 className="font-bold text-gray-900 dark:text-white mb-1">Verify Node Access</h4>
+                                <p className="text-xs text-gray-500 mb-4">OTP broadcasted to <b>{email}</b></p>
                                 
                                 <div className="p-2 bg-white dark:bg-gray-800 rounded-xl inline-block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">
-                                    Demo Code: <span className="text-green-600">123456</span>
+                                    Auth Code: <span className="text-green-600">123456</span>
                                 </div>
 
                                 <div className="flex justify-center">
@@ -472,7 +499,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                                 
                                 <div className="mt-6">
                                     <button type="button" onClick={() => setResendTimer(30)} disabled={resendTimer > 0} className={`text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 mx-auto ${resendTimer > 0 ? 'text-gray-400' : 'text-blue-600 hover:text-blue-700'}`}>
-                                        {resendTimer > 0 ? <><Timer size={14} /> Resend in {resendTimer}s</> : 'Resend Code'}
+                                        {resendTimer > 0 ? <><Timer size={14} /> Resend in {resendTimer}s</> : 'Request New Code'}
                                     </button>
                                 </div>
                             </div>
@@ -495,7 +522,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
               ) : (
                 <>
                   <span className="text-lg">
-                      {isBlankedOut ? 'Recover Account' : (isLogin ? 'Sign In' : (regStep === 1 ? 'Next Step' : regStep === 2 ? 'Verify Email' : 'Create Account'))}
+                      {isBlankedOut ? 'Recover Access' : (isLogin ? 'Enter Node' : (regStep === 1 ? 'Verify Identity' : regStep === 2 ? 'Establish Key' : 'Finalize Enrollment'))}
                   </span>
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </>
@@ -508,9 +535,9 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                 onClick={toggleMode} 
                 className="text-gray-500 dark:text-gray-400 font-medium hover:text-gray-900 dark:hover:text-white transition-colors"
              >
-                {isLogin ? "New to NUESA? " : "Already have an account? "}
+                {isLogin ? "No academic node? " : "Already verified? "}
                 <span className={`font-black ${isLogin ? 'text-green-600' : 'text-orange-500'}`}>
-                    {isLogin ? 'Sign up for free' : 'Log in here'}
+                    {isLogin ? 'Establish new node' : 'Enter existing node'}
                 </span>
              </button>
           </div>
